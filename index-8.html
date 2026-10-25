@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MHDAI - Assistant Intelligent</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#00d2ff">
+    <style>
+        :root {
+            --bg-color: #050b14;
+            --chat-bg: #0b162c;
+            --accent-color: #00d2ff;
+            --accent-glow: rgba(0, 210, 255, 0.4);
+            --text-color: #e2e8f0;
+            --user-bubble: #1e3a8a;
+            --ai-bubble: #112240;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* En-tête */
+        header {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #0b162c, #050b14);
+            border-bottom: 1px solid rgba(0, 210, 255, 0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-container {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--accent-color);
+            box-shadow: 0 0 10px var(--accent-glow);
+            margin-right: 15px;
+        }
+
+        .logo-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .header-title h1 {
+            font-size: 1.2rem;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .header-title p {
+            font-size: 0.8rem;
+            color: var(--accent-color);
+        }
+
+        /* Zone de discussion */
+        #chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            word-break: break-word;
+            animation: fadeIn 0.3s ease-out;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--user-bubble);
+            color: #fff;
+            align-self: flex-end;
+            border-bottom-right-radius: 3px;
+        }
+
+        .ai-message {
+            background-color: var(--ai-bubble);
+            color: var(--text-color);
+            align-self: flex-start;
+            border-bottom-left-radius: 3px;
+            border: 1px solid rgba(0, 210, 255, 0.1);
+        }
+
+        .media-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+            max-height: 200px;
+            display: block;
+        }
+
+        /* Barre d'écriture et d'envoi */
+        .input-panel {
+            background-color: var(--chat-bg);
+            padding: 15px;
+            border-top: 1px solid rgba(0, 210, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: rgba(0, 210, 255, 0.1);
+        }
+
+        textarea {
+            flex: 1;
+            background-color: #050b14;
+            border: 1px solid rgba(0, 210, 255, 0.3);
+            border-radius: 20px;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 0.95rem;
+            resize: none;
+            max-height: 100px;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        #send-btn {
+            background: linear-gradient(135deg, #00d2ff, #0072ff);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        #send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .file-indicator {
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <!-- Assurez-vous d'avoir un fichier logo.png dans le même dossier -->
+            <img src="logo.png" alt="Logo MHDAI">
+        </div>
+        <div class="header-title">
+            <h1>MHDAI</h1>
+            <p>Assistant Virtuel Interactif</p>
+        </div>
+    </header>
+
+    <div id="chat-container">
+        <div class="message ai-message">
+            Bonjour ! C'est MHD. Je suis à ton écoute. Tu peux m'écrire, m'envoyer des photos, des vidéos ou des audios, et je t'aiderai avec précision en trouvant les meilleures informations. De quoi veux-tu qu'on discute ?
+        </div>
+    </div>
+
+    <div class="input-panel">
+        <div id="file-indicator" class="file-indicator">📎 Fichier joint prêt à l'envoi</div>
+        <div class="input-controls">
+            <input type="file" id="file-input" accept="image/*,video/*,audio/*">
+            <button class="icon-btn" onclick="document.getElementById('file-input').click()" title="Joindre un fichier (photo, vidéo, audio)">📁</button>
+            <textarea id="user-input" rows="1" placeholder="Écris ton message à MHD..."></textarea>
+            <button id="send-btn" onclick="sendMessage()">Envoyer</button>
+        </div>
+    </div>
+
+    <script>
+        // Enregistrement du Service Worker pour l'installation PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const fileInput = document.getElementById('file-input');
+        const fileIndicator = document.getElementById('file-indicator');
+        
+        let selectedFile = null;
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                fileIndicator.style.display = 'flex';
+                fileIndicator.textContent = `📎 Prêt : ${selectedFile.name}`;
+            }
+        });
+
+        // Fonction de synthèse vocale (L'IA parle avec une voix humaine)
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // Arrêter la voix précédente si elle parle encore
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'fr-FR';
+                utterance.rate = 1.0;
+                utterance.pitch = 0.9; // Ton légèrement plus grave pour faire plus "homme"
+
+                // Sélectionner une voix masculine si disponible dans le navigateur
+                const voices = window.speechSynthesis.getVoices();
+                const frenchVoice = voices.find(v => v.lang.startsWith('fr') && (v.name.includes('Google') || v.name.includes('Paul') || v.name.includes('Male')));
+                if (frenchVoice) {
+                    utterance.voice = frenchVoice;
+                }
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text && !selectedFile) return;
+
+            // Affichage du message utilisateur
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'message user-message';
+            
+            let messageContent = text;
+            if (selectedFile) {
+                messageContent += `<br><small>[Fichier attaché : ${selectedFile.name}]</small>`;
+                if (selectedFile.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(selectedFile);
+                    img.className = 'media-preview';
+                    userMsgDiv.appendChild(img);
+                }
+            }
+            
+            userMsgDiv.innerHTML = messageContent;
+            chatContainer.appendChild(userMsgDiv);
+
+            // Réinitialisation des champs
+            const currentFile = selectedFile;
+            userInput.value = '';
+            selectedFile = null;
+            fileInput.value = '';
+            fileIndicator.style.display = 'none';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            // Simulation de la réponse intelligente de l'IA (Personnalité humaine / masculine)
+            setTimeout(() => {
+                const aiMsgDiv = document.createElement('div');
+                aiMsgDiv.className = 'message ai-message';
+                
+                let replyText = "";
+                if (currentFile) {
+                    replyText = `J'ai bien reçu ton fichier "${currentFile.name}". L'analyse est en cours, je regarde ça en détail pour te donner l'information exacte que tu cherches.`;
+                } else if (text.toLowerCase().includes('bonjour') || text.toLowerCase().includes('salut')) {
+                    replyText = "Salut l'ami ! Comment ça va aujourd'hui ? Qu'est-ce qu'on étudie ou prépare ensemble ?";
+                } else {
+                    replyText = `C'est une excellente question. D'après mes recherches sur les sites spécialisés et vérifiés, voici ce qu'il faut retenir : pour "${text}", les sources concordent pour dire qu'il s'agit d'un point clé à aborder avec méthode. Tu veux qu'on creoue un aspect en particulier ?`;
+                }
+
+                aiMsgDiv.textContent = replyText;
+                chatContainer.appendChild(aiMsgDiv);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // L'IA lit sa réponse à haute voix
+                speakText(replyText);
+            }, 1000);
+        }
+
+        // Permettre l'envoi avec la touche Entrée
+        userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
